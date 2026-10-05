@@ -5,7 +5,7 @@ on:
     workflows: ["CI pipeline"]  # Name of our CI workflow
     types:
       - completed
-
+    branches: [main]
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -13,6 +13,16 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+
+      - name: Debug secrets (à supprimer ensuite)
+        env:
+          U: ${{ secrets.DOCKER_USERNAME }}
+          P: ${{ secrets.DOCKER_PASSWORD }}
+        run: |
+          echo "user length: ${#U}"
+          echo "pass length: ${#P}"
+          printf '%s' "$U" | grep -qP '[^\x21-\x7E]' && echo "USER: caractère invalide" || echo "USER: ok"
+          printf '%s' "$P" | grep -qP '[^\x21-\x7E]' && echo "PASS: caractère invalide" || echo "PASS: ok"
 
       - name: Log in to Docker Hub
         uses: docker/login-action@6d4b68b490aef8836e8fb5e50ee7b3bdfa5894f0
@@ -24,7 +34,7 @@ jobs:
         id: push
         uses: docker/build-push-action@14487ce63c7a62a4a324b0bfb37086795e31c6c1
         with:
-          context: .
-          file: ./Dockerfile
+          context: calculator
+          file: calculator/Dockerfile
           push: true
-          tags: jedha/calculator:latest
+          tags: ${{ secrets.DOCKER_USERNAME }}/calculator:latest
