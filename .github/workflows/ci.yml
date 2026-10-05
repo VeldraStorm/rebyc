@@ -36,30 +36,24 @@ jobs:
           flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
       - name: Test with pytest
         run: pytest tests/
-  
+ 
   trivy-scan:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Run Trivy vulnerability scanner in filesystem mode
-        continue-on-error: true
+      - name: Run Trivy
         uses: aquasecurity/trivy-action@b3dafe507ffa004210975439a1e6156b8ebb3f50
         with:
+          version: 'v0.69.3'
           scan-type: 'fs'
-          scan-ref: '.'
+          scan-ref: 'calculator'
           format: 'sarif'
           output: 'trivy-results.sarif'
           severity: 'CRITICAL,HIGH'
-          exit-code: '0'
 
-      - name: Create empty SARIF if Trivy did not produce one
-        run: |
-          [ -f trivy-results.sarif ] || echo '{"version":"2.1.0","runs":[]}' > trivy-results.sarif
-
-      - name: Upload Trivy scan results to GitHub Security tab
-        continue-on-error: true
+      - name: Upload to Security tab
         uses: github/codeql-action/upload-sarif@v3
         with:
-          sarif_file: 'trivy-results.sarif'
+          sarif_file: 'trivy-results.sarif' 
